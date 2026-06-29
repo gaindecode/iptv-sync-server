@@ -1,0 +1,31 @@
+spring:
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/iptv_sync}
+    username: ${DB_USER:iptv}
+    password: ${DB_PASSWORD:iptv}
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+
+server:
+  port: ${PORT:8080}
+
+app:
+  pair-code:
+    length: 6
+    expiry-minutes: 10
+  websocket:
+    ping-interval-ms: 30000
+  cors:
+    allowed-origins: ${CORS_ORIGINS:http://localhost:3000,http://localhost:5173}

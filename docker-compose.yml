@@ -1,0 +1,39 @@
+version: '3.9'
+
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: iptv_db
+    environment:
+      POSTGRES_DB: iptv_sync
+      POSTGRES_USER: iptv
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-iptv_secret}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U iptv -d iptv_sync"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  server:
+    build: .
+    container_name: iptv_server
+    environment:
+      DB_URL: jdbc:postgresql://db:5432/iptv_sync
+      DB_USER: iptv
+      DB_PASSWORD: ${DB_PASSWORD:-iptv_secret}
+      PORT: 8080
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:3000}
+    ports:
+      - "8080:8080"
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
