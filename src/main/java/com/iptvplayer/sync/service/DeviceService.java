@@ -35,27 +35,45 @@ public class DeviceService {
     private final SecureRandom random = new SecureRandom();
 
     /**
-     * Enregistre un nouveau device (ou met à jour lastSeen).
-     * Retourne le device + un PairCode frais.
+     * Enregistre un device, ou réutilise celui existant si request.deviceId()
+     * correspond à un device déjà connu (idempotence basée sur l'UUID
+     * stable généré côté client et stocké en MMKV — voir syncService.ts
+     * getOrCreateDeviceId()). Sans cette réutilisation, chaque appel créait
+     * un nouveau device en base, désynchronisé de la connexion WebSocket
+     * qui utilise toujours le même deviceId local côté TV.
      */
     @Transactional
     public DeviceDto.RegisterResponse register(DeviceDto.RegisterRequest request) {
-        Device device = Device.builder()
-            .deviceName(request.deviceName())
-            .deviceType(request.deviceType() != null ? request.deviceType() : Device.DeviceType.ANDROID_TV)
-            .platform("ANDROID")
-            .status(Device.DeviceStatus.ONLINE)
-            .build();
-        device = deviceRepository.save(device);
+        Device device = (request.deviceId() != null)
+            ? deviceRepository.findById(request.deviceId()).orElse(null)
+            : null;
+
+        if (device != null) {
+            device.setDeviceName(request.deviceName());
+            device.setStatus(Device.DeviceStatus.ONLINE);
+            device.setLastSeen(LocalDateTime.now());
+            device = deviceRepository.save(device);
+            log.info("Device réutilisé : {}", device.getId());
+        } else {
+            device = Device.builder()
+                .id(request.deviceId()) // peut être null → généré dans @PrePersist
+                .deviceName(request.deviceName())
+                .deviceType(request.deviceType() != null ? request.deviceType() : Device.DeviceType.ANDROID_TV)
+                .platform("ANDROID")
+                .status(Device.DeviceStatus.ONLINE)
+                .build();
+            device = deviceRepository.save(device);
+            log.info("Device créé : {}", device.getId());
+        }
 
         PairCode pairCode = generatePairCode(device);
-        log.info("Device enregistré : {} — code : {}", device.getId(), pairCode.getCode());
+        log.info("PairCode généré pour {} : {}", device.getId(), pairCode.getCode());
 
         return new DeviceDto.RegisterResponse(
             device.getId(),
             pairCode.getCode(),
             pairCode.getExpiresAt(),
-            "/link" // URL du portail web (relatif, à préfixer avec le domaine)
+            "/portal"
         );
     }
 

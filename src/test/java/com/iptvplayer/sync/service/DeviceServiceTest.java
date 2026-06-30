@@ -61,7 +61,7 @@ class DeviceServiceTest {
         when(pairCodeRepository.save(any())).thenReturn(savedCode);
 
         DeviceDto.RegisterResponse response = deviceService.register(
-            new DeviceDto.RegisterRequest("TV Samsung", Device.DeviceType.ANDROID_TV)
+            new DeviceDto.RegisterRequest("TV Samsung", Device.DeviceType.ANDROID_TV, null)
         );
 
         assertThat(response.deviceId()).isEqualTo(saved.getId());

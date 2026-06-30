@@ -13,7 +13,10 @@ import java.util.UUID;
 public class Device {
 
     @Id
-    @UuidGenerator
+    // Pas de @UuidGenerator ici : l'ID peut être fourni explicitement par
+    // le client (deviceId généré côté RN, stocké en MMKV) pour garantir
+    // la stabilité entre les appels register() successifs. setIdIfAbsent()
+    // dans @PrePersist génère un UUID seulement si aucun n'a été fourni.
     @Column(nullable = false, updatable = false)
     private UUID id;
 
@@ -39,6 +42,7 @@ public class Device {
 
     @PrePersist
     protected void onCreate() {
+        if (id == null) id = UUID.randomUUID();
         createdAt = LocalDateTime.now();
         if (status == null) status = DeviceStatus.ONLINE;
         if (deviceType == null) deviceType = DeviceType.ANDROID_TV;

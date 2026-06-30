@@ -11,7 +11,10 @@ public class DeviceDto {
 
     public record RegisterRequest(
         @NotBlank @Size(max = 255) String deviceName,
-        Device.DeviceType deviceType
+        Device.DeviceType deviceType,
+        /** UUID généré côté client (MMKV) — si fourni et déjà connu,
+         *  le serveur réutilise ce device au lieu d'en créer un nouveau. */
+        UUID deviceId
     ) {}
 
     public record RegisterResponse(
