@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>IPTV Player — Ajouter une playlist</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-900 text-white min-h-screen flex items-center justify-center p-4">
+
+<div class="w-full max-w-md">
+  <div class="text-center mb-8">
+    <h1 class="text-2xl font-bold">📺 IPTV Player</h1>
+    <p class="text-gray-400 mt-2">Ajoutez une playlist sur votre TV</p>
+  </div>
+
+  <!-- Étape 1 : saisir le code -->
+  <div id="step1" class="bg-gray-800 rounded-xl p-6">
+    <h2 class="text-lg font-semibold mb-4">Étape 1 — Code de votre TV</h2>
+    <p class="text-gray-400 text-sm mb-4">
+      Saisissez le code affiché sur votre téléviseur.
+    </p>
+    <input id="code" type="text" maxlength="6" placeholder="Ex : AB82JK"
+      class="w-full bg-gray-700 rounded-lg px-4 py-3 text-lg font-mono tracking-widest text-center uppercase focus:outline-none focus:ring-2 focus:ring-blue-500"
+    />
+    <button onclick="verifyCode()"
+      class="mt-4 w-full bg-blue-600 hover:bg-blue-700 rounded-lg py-3 font-semibold transition">
+      Vérifier le code
+    </button>
+    <p id="codeError" class="text-red-400 text-sm mt-2 hidden"></p>
+  </div>
+
+  <!-- Étape 2 : ajouter la playlist -->
+  <div id="step2" class="bg-gray-800 rounded-xl p-6 hidden">
+    <div class="flex items-center gap-3 mb-6">
+      <div class="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+      <span class="text-green-400 text-sm font-medium" id="deviceInfo">TV connectée</span>
+    </div>
+
+    <h2 class="text-lg font-semibold mb-4">Étape 2 — Ajouter une playlist</h2>
+
+    <label class="block text-sm text-gray-400 mb-1">Nom</label>
+    <input id="name" type="text" placeholder="Ma playlist"
+      class="w-full bg-gray-700 rounded-lg px-4 py-2 mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500"
+    />
+
+    <label class="block text-sm text-gray-400 mb-1">Type</label>
+    <select id="sourceType" onchange="toggleSourceType()"
+      class="w-full bg-gray-700 rounded-lg px-4 py-2 mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500">
+      <option value="url">URL M3U</option>
+      <option value="xtream">Xtream Codes</option>
+    </select>
+
+    <!-- URL M3U -->
+    <div id="urlSection">
+      <label class="block text-sm text-gray-400 mb-1">URL M3U</label>
+      <input id="source" type="url" placeholder="https://..."
+        class="w-full bg-gray-700 rounded-lg px-4 py-2 mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500"
+      />
+    </div>
+
+    <!-- Xtream -->
+    <div id="xtreamSection" class="hidden">
+      <label class="block text-sm text-gray-400 mb-1">Serveur</label>
+      <input id="xtreamServer" type="url" placeholder="http://serveur.com:8080"
+        class="w-full bg-gray-700 rounded-lg px-4 py-2 mb-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+      />
+      <label class="block text-sm text-gray-400 mb-1">Nom d'utilisateur</label>
+      <input id="xtreamUser" type="text" placeholder="username"
+        class="w-full bg-gray-700 rounded-lg px-4 py-2 mb-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+      />
+      <label class="block text-sm text-gray-400 mb-1">Mot de passe</label>
+      <input id="xtreamPass" type="password" placeholder="password"
+        class="w-full bg-gray-700 rounded-lg px-4 py-2 mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500"
+      />
+    </div>
+
+    <label class="block text-sm text-gray-400 mb-1">URL EPG <span class="text-gray-500">(optionnel)</span></label>
+    <input id="epgUrl" type="url" placeholder="https://..."
+      class="w-full bg-gray-700 rounded-lg px-4 py-2 mb-6 focus:outline-none focus:ring-2 focus:ring-blue-500"
+    />
+
+    <button onclick="sendPlaylist()"
+      class="w-full bg-green-600 hover:bg-green-700 rounded-lg py-3 font-semibold transition">
+      📺 Envoyer à la TV
+    </button>
+    <p id="playlistError" class="text-red-400 text-sm mt-2 hidden"></p>
+  </div>
+
+  <!-- Étape 3 : succès -->
+  <div id="step3" class="bg-gray-800 rounded-xl p-6 text-center hidden">
+    <div class="text-5xl mb-4">✅</div>
+    <h2 class="text-xl font-bold mb-2">Playlist envoyée !</h2>
+    <p class="text-gray-400">Votre TV va recevoir la playlist dans quelques secondes.</p>
+    <button onclick="reset()"
+      class="mt-6 text-blue-400 hover:text-blue-300 text-sm transition">
+      Ajouter une autre playlist
+    </button>
+  </div>
+</div>
+
+<script>
+  // ── Config ──────────────────────────────────────────────────────────────────
+  // Remplacer par l'URL de votre serveur en production
+  const API_BASE = window.location.origin;
+
+  let resolvedDeviceId = null;
+
+  // ── Étape 1 : vérifier le code ──────────────────────────────────────────────
+  async function verifyCode() {
+    const code = document.getElementById('code').value.trim().toUpperCase();
+    const errorEl = document.getElementById('codeError');
+    errorEl.classList.add('hidden');
+
+    if (code.length !== 6) {
+      showError(errorEl, 'Le code doit contenir 6 caractères.');
+      return;
+    }
+
+    try {
+      const res = await fetch(`${API_BASE}/api/device/resolve/${code}`);
+      if (!res.ok) {
+        showError(errorEl, 'Code invalide ou expiré. Vérifiez le code affiché sur votre TV.');
+        return;
+      }
+      const device = await res.json();
+      resolvedDeviceId = device.deviceId;
+
+      document.getElementById('deviceInfo').textContent = `${device.deviceName} connectée`;
+      document.getElementById('step1').classList.add('hidden');
+      document.getElementById('step2').classList.remove('hidden');
+    } catch (e) {
+      showError(errorEl, 'Erreur réseau. Réessayez.');
+    }
+  }
+
+  // ── Étape 2 : envoyer la playlist ──────────────────────────────────────────
+  async function sendPlaylist() {
+    const errorEl = document.getElementById('playlistError');
+    errorEl.classList.add('hidden');
+
+    const sourceType = document.getElementById('sourceType').value;
+    const body = {
+      name: document.getElementById('name').value.trim() || 'Ma playlist',
+      sourceType,
+      epgUrl: document.getElementById('epgUrl').value.trim() || null,
+    };
+
+    if (sourceType === 'url') {
+      body.source = document.getElementById('source').value.trim();
+      if (!body.source) { showError(errorEl, 'L\'URL M3U est requise.'); return; }
+    } else {
+      body.xtreamServer   = document.getElementById('xtreamServer').value.trim();
+      body.xtreamUsername = document.getElementById('xtreamUser').value.trim();
+      body.xtreamPassword = document.getElementById('xtreamPass').value.trim();
+      if (!body.xtreamServer) { showError(errorEl, 'Le serveur Xtream est requis.'); return; }
+    }
+
+    try {
+      const res = await fetch(`${API_BASE}/api/device/code/${document.getElementById('code').value.trim().toUpperCase()}/playlist`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+
+      if (!res.ok) {
+        const err = await res.json();
+        showError(errorEl, err.error || 'Erreur lors de l\'envoi.');
+        return;
+      }
+
+      document.getElementById('step2').classList.add('hidden');
+      document.getElementById('step3').classList.remove('hidden');
+    } catch (e) {
+      showError(errorEl, 'Erreur réseau. Réessayez.');
+    }
+  }
+
+  function toggleSourceType() {
+    const type = document.getElementById('sourceType').value;
+    document.getElementById('urlSection').classList.toggle('hidden', type !== 'url');
+    document.getElementById('xtreamSection').classList.toggle('hidden', type !== 'xtream');
+  }
+
+  function reset() {
+    resolvedDeviceId = null;
+    document.getElementById('code').value = '';
+    document.getElementById('step3').classList.add('hidden');
+    document.getElementById('step1').classList.remove('hidden');
+  }
+
+  function showError(el, msg) {
+    el.textContent = msg;
+    el.classList.remove('hidden');
+  }
+
+  // Touche Entrée sur le code
+  document.getElementById('code').addEventListener('keypress', e => {
+    if (e.key === 'Enter') verifyCode();
+  });
+</script>
+</body>
+</html>
