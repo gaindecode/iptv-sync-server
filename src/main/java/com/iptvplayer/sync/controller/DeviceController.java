@@ -3,6 +3,7 @@ package com.iptvplayer.sync.controller;
 import com.iptvplayer.sync.domain.device.Device;
 import com.iptvplayer.sync.domain.pairing.PairCode;
 import com.iptvplayer.sync.dto.DeviceDto;
+import com.iptvplayer.sync.dto.SyncEventDto;
 import com.iptvplayer.sync.service.DeviceService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;

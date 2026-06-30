@@ -29,12 +29,12 @@ public class PlaylistController {
      * Body : { "name": "Maison", "sourceType": "url", "source": "https://..." }
      */
     @PostMapping("/device/code/{pairCode}/playlist")
-    public ResponseEntity<?> addPlaylistByCode(
+    public ResponseEntity<Object> addPlaylistByCode(
         @PathVariable String pairCode,
         @Valid @RequestBody PlaylistDto.AddRequest request
     ) {
         return deviceService.resolveCode(pairCode)
-            .map(device -> {
+            .<ResponseEntity<Object>>map(device -> {
                 PlaylistDto.PlaylistResponse response =
                     playlistService.addPlaylist(device.getId(), request);
                 deviceService.markCodeUsed(pairCode);
