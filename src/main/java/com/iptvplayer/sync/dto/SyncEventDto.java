@@ -1,6 +1,7 @@
 package com.iptvplayer.sync.dto;
 
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 
 public class SyncEventDto {
 
@@ -11,6 +12,6 @@ public class SyncEventDto {
 
     public record PairCodeResponse(
         String pairCode,
-        LocalDateTime expiresAt
+        OffsetDateTime expiresAt
     ) {}
 }

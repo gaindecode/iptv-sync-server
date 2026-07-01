@@ -6,6 +6,8 @@ import lombok.*;
 import org.hibernate.annotations.UuidGenerator;
 
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.util.UUID;
 
 @Entity
@@ -26,7 +28,7 @@ public class PairCode {
     private String code;
 
     @Column(name = "expires_at", nullable = false)
-    private LocalDateTime expiresAt;
+    private OffsetDateTime expiresAt;
 
     @Column(nullable = false)
     private boolean used;
@@ -40,7 +42,7 @@ public class PairCode {
     }
 
     public boolean isExpired() {
-        return LocalDateTime.now().isAfter(expiresAt);
+        return OffsetDateTime.now(ZoneOffset.UTC).isAfter(expiresAt);
     }
 
     public boolean isValid() {

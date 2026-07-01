@@ -14,6 +14,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.security.SecureRandom;
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -87,7 +89,7 @@ public class DeviceService {
             .orElseThrow(() -> new IllegalArgumentException("Device introuvable : " + deviceId));
 
         // Invalider le code précédent
-        pairCodeRepository.findActiveByDeviceId(deviceId, LocalDateTime.now())
+        pairCodeRepository.findActiveByDeviceId(deviceId, OffsetDateTime.now(ZoneOffset.UTC))
             .ifPresent(old -> {
                 old.setUsed(true);
                 pairCodeRepository.save(old);
@@ -127,7 +129,7 @@ public class DeviceService {
     @Scheduled(fixedDelay = 3_600_000)
     @Transactional
     public void cleanExpiredCodes() {
-        pairCodeRepository.deleteExpired(LocalDateTime.now());
+        pairCodeRepository.deleteExpired(OffsetDateTime.now(ZoneOffset.UTC));
         log.debug("Codes expirés nettoyés");
     }
 
@@ -138,7 +140,7 @@ public class DeviceService {
         PairCode pairCode = PairCode.builder()
             .device(device)
             .code(code)
-            .expiresAt(LocalDateTime.now().plusMinutes(expiryMinutes))
+            .expiresAt(OffsetDateTime.now(ZoneOffset.UTC).plusMinutes(expiryMinutes))
             .used(false)
             .build();
         return pairCodeRepository.save(pairCode);

@@ -15,6 +15,8 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -36,7 +38,7 @@ class DeviceControllerTest {
     @DisplayName("POST /api/device/register — 200 avec deviceId et pairCode")
     void register_shouldReturn200() throws Exception {
         UUID deviceId = UUID.randomUUID();
-        LocalDateTime expiry = LocalDateTime.now().plusMinutes(10);
+        OffsetDateTime expiry = OffsetDateTime.now(ZoneOffset.UTC).plusMinutes(10);
 
         when(deviceService.register(any())).thenReturn(
             new DeviceDto.RegisterResponse(deviceId, "AB82JK", expiry, "/link")

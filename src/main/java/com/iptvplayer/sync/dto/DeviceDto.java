@@ -5,6 +5,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.UUID;
 
 public class DeviceDto {
@@ -20,7 +21,7 @@ public class DeviceDto {
     public record RegisterResponse(
         UUID deviceId,
         String pairCode,
-        LocalDateTime pairCodeExpiresAt,
+        OffsetDateTime pairCodeExpiresAt,
         String portalUrl
     ) {}
 

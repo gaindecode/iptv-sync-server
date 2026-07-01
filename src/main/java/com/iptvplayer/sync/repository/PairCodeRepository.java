@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -16,10 +17,10 @@ public interface PairCodeRepository extends JpaRepository<PairCode, UUID> {
     Optional<PairCode> findByCodeAndUsedFalse(String code);
 
     @Query("SELECT p FROM PairCode p WHERE p.device.id = :deviceId AND p.used = false AND p.expiresAt > :now")
-    Optional<PairCode> findActiveByDeviceId(UUID deviceId, LocalDateTime now);
+    Optional<PairCode> findActiveByDeviceId(UUID deviceId, OffsetDateTime now);
 
     /** Nettoyage planifié des codes expirés */
     @Modifying
     @Query("DELETE FROM PairCode p WHERE p.expiresAt < :now")
-    void deleteExpired(LocalDateTime now);
+    void deleteExpired(OffsetDateTime now);
 }

@@ -15,6 +15,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -52,7 +54,7 @@ class DeviceServiceTest {
             .id(UUID.randomUUID())
             .device(saved)
             .code("AB82JK")
-            .expiresAt(LocalDateTime.now().plusMinutes(10))
+            .expiresAt(OffsetDateTime.now(ZoneOffset.UTC).plusMinutes(10))
             .used(false)
             .build();
 
@@ -66,7 +68,7 @@ class DeviceServiceTest {
 
         assertThat(response.deviceId()).isEqualTo(saved.getId());
         assertThat(response.pairCode()).hasSize(6);
-        assertThat(response.pairCodeExpiresAt()).isAfter(LocalDateTime.now());
+        assertThat(response.pairCodeExpiresAt()).isAfter(OffsetDateTime.now(ZoneOffset.UTC));
         verify(deviceRepository).save(any(Device.class));
         verify(pairCodeRepository).save(any(PairCode.class));
     }
@@ -78,7 +80,7 @@ class DeviceServiceTest {
         PairCode code = PairCode.builder()
             .code("ABCDEF")
             .device(device)
-            .expiresAt(LocalDateTime.now().plusMinutes(5))
+            .expiresAt(OffsetDateTime.now(ZoneOffset.UTC).plusMinutes(5))
             .used(false)
             .build();
 
@@ -97,7 +99,7 @@ class DeviceServiceTest {
         PairCode expiredCode = PairCode.builder()
             .code("EXPIRY")
             .device(device)
-            .expiresAt(LocalDateTime.now().minusMinutes(1)) // expiré
+            .expiresAt(OffsetDateTime.now(ZoneOffset.UTC).minusMinutes(1)) // expiré
             .used(false)
             .build();
 
@@ -125,10 +127,10 @@ class DeviceServiceTest {
         Device device = Device.builder().id(deviceId).deviceName("TV").build();
         PairCode oldCode = PairCode.builder()
             .device(device).code("OLDCOD")
-            .expiresAt(LocalDateTime.now().plusMinutes(5)).used(false).build();
+            .expiresAt(OffsetDateTime.now(ZoneOffset.UTC).plusMinutes(5)).used(false).build();
         PairCode newCode = PairCode.builder()
             .device(device).code("NEWCOD")
-            .expiresAt(LocalDateTime.now().plusMinutes(10)).used(false).build();
+            .expiresAt(OffsetDateTime.now(ZoneOffset.UTC).plusMinutes(10)).used(false).build();
 
         when(deviceRepository.findById(deviceId)).thenReturn(Optional.of(device));
         when(pairCodeRepository.findActiveByDeviceId(eq(deviceId), any())).thenReturn(Optional.of(oldCode));
@@ -145,6 +147,6 @@ class DeviceServiceTest {
     @DisplayName("cleanExpiredCodes() supprime les codes expirés")
     void cleanExpiredCodes_shouldDeleteExpired() {
         deviceService.cleanExpiredCodes();
-        verify(pairCodeRepository).deleteExpired(any(LocalDateTime.class));
+        verify(pairCodeRepository).deleteExpired(any(OffsetDateTime.class));
     }
 }
