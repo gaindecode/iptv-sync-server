@@ -12,6 +12,13 @@ COPY --from=builder /app/target/iptv-sync-server-*.jar app.jar
 
 # Utilisateur non-root pour la sécurité
 RUN addgroup -S iptv && adduser -S iptv -G iptv
+
+# Créer le répertoire uploads AVANT de passer en user iptv,
+# puis lui donner les permissions d'écriture — le volume Docker
+# uploads_data sera monté ici au runtime, mais sans ce mkdir le
+# répertoire appartient à root et l'utilisateur iptv ne peut pas écrire.
+RUN mkdir -p /app/uploads && chown -R iptv:iptv /app/uploads
+
 USER iptv
 
 EXPOSE 8080

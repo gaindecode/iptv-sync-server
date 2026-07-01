@@ -26,6 +26,9 @@ services:
       DB_PASSWORD: ${DB_PASSWORD:-iptv_secret}
       PORT: 8080
       CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:3000}
+      UPLOAD_DIR: /app/uploads
+    volumes:
+      - uploads_data:/app/uploads
     ports:
       - "8080:8080"
     depends_on:
@@ -35,3 +38,4 @@ services:
 
 volumes:
   postgres_data:
+  uploads_data:

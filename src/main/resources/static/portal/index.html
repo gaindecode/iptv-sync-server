@@ -48,6 +48,7 @@
     <select id="sourceType" onchange="toggleSourceType()"
       class="w-full bg-gray-700 rounded-lg px-4 py-2 mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500">
       <option value="url">URL M3U</option>
+      <option value="file">Fichier M3U</option>
       <option value="xtream">Xtream Codes</option>
     </select>
 
@@ -57,6 +58,15 @@
       <input id="source" type="url" placeholder="https://..."
         class="w-full bg-gray-700 rounded-lg px-4 py-2 mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500"
       />
+    </div>
+
+    <!-- Fichier M3U -->
+    <div id="fileSection" class="hidden">
+      <label class="block text-sm text-gray-400 mb-1">Fichier .m3u / .m3u8</label>
+      <input id="file" type="file" accept=".m3u,.m3u8,audio/x-mpegurl,application/x-mpegurl"
+        class="w-full bg-gray-700 rounded-lg px-3 py-2 mb-1 text-sm file:mr-3 file:py-1.5 file:px-3 file:rounded-md file:border-0 file:bg-blue-600 file:text-white file:text-sm focus:outline-none"
+      />
+      <p class="text-xs text-gray-500 mb-4">Taille max : 20 Mo</p>
     </div>
 
     <!-- Xtream -->
@@ -140,28 +150,48 @@
     errorEl.classList.add('hidden');
 
     const sourceType = document.getElementById('sourceType').value;
-    const body = {
-      name: document.getElementById('name').value.trim() || 'Ma playlist',
-      sourceType,
-      epgUrl: document.getElementById('epgUrl').value.trim() || null,
-    };
-
-    if (sourceType === 'url') {
-      body.source = document.getElementById('source').value.trim();
-      if (!body.source) { showError(errorEl, 'L\'URL M3U est requise.'); return; }
-    } else {
-      body.xtreamServer   = document.getElementById('xtreamServer').value.trim();
-      body.xtreamUsername = document.getElementById('xtreamUser').value.trim();
-      body.xtreamPassword = document.getElementById('xtreamPass').value.trim();
-      if (!body.xtreamServer) { showError(errorEl, 'Le serveur Xtream est requis.'); return; }
-    }
+    const code = document.getElementById('code').value.trim().toUpperCase();
+    const name = document.getElementById('name').value.trim() || 'Ma playlist';
+    const epgUrl = document.getElementById('epgUrl').value.trim();
 
     try {
-      const res = await fetch(`${API_BASE}/api/device/code/${document.getElementById('code').value.trim().toUpperCase()}/playlist`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body),
-      });
+      let res;
+
+      if (sourceType === 'file') {
+        // Upload multipart — endpoint dédié /playlist/upload, le serveur
+        // stocke le fichier et le sert ensuite comme une URL M3U classique.
+        const fileInput = document.getElementById('file');
+        const file = fileInput.files[0];
+        if (!file) { showError(errorEl, 'Sélectionnez un fichier .m3u.'); return; }
+
+        const formData = new FormData();
+        formData.append('name', name);
+        formData.append('file', file);
+        if (epgUrl) formData.append('epgUrl', epgUrl);
+
+        res = await fetch(`${API_BASE}/api/device/code/${code}/playlist/upload`, {
+          method: 'POST',
+          body: formData, // pas de Content-Type manuel — le navigateur fixe le boundary multipart
+        });
+      } else {
+        const body = { name, sourceType, epgUrl: epgUrl || null };
+
+        if (sourceType === 'url') {
+          body.source = document.getElementById('source').value.trim();
+          if (!body.source) { showError(errorEl, 'L\'URL M3U est requise.'); return; }
+        } else {
+          body.xtreamServer   = document.getElementById('xtreamServer').value.trim();
+          body.xtreamUsername = document.getElementById('xtreamUser').value.trim();
+          body.xtreamPassword = document.getElementById('xtreamPass').value.trim();
+          if (!body.xtreamServer) { showError(errorEl, 'Le serveur Xtream est requis.'); return; }
+        }
+
+        res = await fetch(`${API_BASE}/api/device/code/${code}/playlist`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body),
+        });
+      }
 
       if (!res.ok) {
         const err = await res.json();
@@ -179,6 +209,7 @@
   function toggleSourceType() {
     const type = document.getElementById('sourceType').value;
     document.getElementById('urlSection').classList.toggle('hidden', type !== 'url');
+    document.getElementById('fileSection').classList.toggle('hidden', type !== 'file');
     document.getElementById('xtreamSection').classList.toggle('hidden', type !== 'xtream');
   }
 
