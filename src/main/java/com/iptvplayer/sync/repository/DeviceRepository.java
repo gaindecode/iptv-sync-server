@@ -7,10 +7,13 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 @Repository
 public interface DeviceRepository extends JpaRepository<Device, UUID> {
+
+    List<Device> findAllByOrderByLastSeenDesc();
 
     @Modifying
     @Query("UPDATE Device d SET d.lastSeen = :now, d.status = 'ONLINE' WHERE d.id = :id")

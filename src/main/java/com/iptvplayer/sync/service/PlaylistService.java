@@ -97,6 +97,21 @@ public class PlaylistService {
         log.info("Playlist {} supprimée pour device {}", playlistId, deviceId);
     }
 
+    @Transactional
+    public void mergeAll(UUID deviceId) {
+        Device device = deviceRepository.findById(deviceId)
+            .orElseThrow(() -> new IllegalArgumentException("Device introuvable"));
+
+        persistEvent(device, SyncEvent.EventType.MERGE_ALL, Map.of());
+
+        wsManager.sendToDevice(deviceId.toString(), Map.of(
+            "type", "MERGE_ALL",
+            "payload", Map.of()
+        ));
+
+        log.info("MERGE_ALL envoyé pour device {}", deviceId);
+    }
+
     /**
      * Polling fallback — retourne les événements non consommés.
      * Utilisé quand le WebSocket n'est pas disponible.

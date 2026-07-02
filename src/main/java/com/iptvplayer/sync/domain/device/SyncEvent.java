@@ -46,6 +46,7 @@ public class SyncEvent {
     public enum EventType {
         PLAYLIST_ADDED,
         PLAYLIST_UPDATED,
-        PLAYLIST_REMOVED
+        PLAYLIST_REMOVED,
+        MERGE_ALL
     }
 }

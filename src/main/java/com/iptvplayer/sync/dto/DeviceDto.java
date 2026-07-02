@@ -6,6 +6,7 @@ import jakarta.validation.constraints.Size;
 
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
+import java.util.List;
 import java.util.UUID;
 
 public class DeviceDto {
@@ -30,5 +31,13 @@ public class DeviceDto {
         String deviceName,
         Device.DeviceStatus status,
         LocalDateTime lastSeen
+    ) {}
+
+    public record DeviceWithPlaylistsResponse(
+        UUID deviceId,
+        String deviceName,
+        Device.DeviceStatus status,
+        LocalDateTime lastSeen,
+        List<com.iptvplayer.sync.dto.PlaylistDto.PlaylistResponse> playlists
     ) {}
 }

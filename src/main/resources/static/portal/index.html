@@ -32,78 +32,114 @@
 
   <!-- Étape 2 : ajouter la playlist -->
   <div id="step2" class="bg-gray-800 rounded-xl p-6 hidden">
-    <div class="flex items-center gap-3 mb-6">
+    <!-- Header appareil -->
+    <div class="flex items-center gap-3 mb-5">
       <div class="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
       <span class="text-green-400 text-sm font-medium" id="deviceInfo">TV connectée</span>
     </div>
 
-    <h2 class="text-lg font-semibold mb-4">Étape 2 — Ajouter une playlist</h2>
+    <!-- Playlists existantes -->
+    <div class="mb-5">
+      <div class="flex justify-between items-center mb-3">
+        <h2 class="text-sm font-medium text-gray-400 uppercase tracking-wider">Playlists sur cette TV</h2>
+        <button onclick="loadPlaylists()" class="text-xs text-gray-500 hover:text-gray-300">↻</button>
+      </div>
+      <div id="existingPlaylists">
+        <p class="text-gray-600 text-sm text-center py-3">Chargement…</p>
+      </div>
+    </div>
 
-    <label class="block text-sm text-gray-400 mb-1">Nom</label>
-    <input id="name" type="text" placeholder="Ma playlist"
-      class="w-full bg-gray-700 rounded-lg px-4 py-2 mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500"
-    />
+    <!-- Actions globales -->
+    <div class="flex gap-2 mb-5">
+      <button onclick="showAddForm()"
+        class="flex-1 bg-blue-600 hover:bg-blue-700 rounded-lg py-2.5 text-sm font-semibold transition">
+        + Ajouter une playlist
+      </button>
+      <button onclick="mergeAll()"
+        class="flex-1 bg-purple-700 hover:bg-purple-600 rounded-lg py-2.5 text-sm font-semibold transition"
+        id="mergeBtn">
+        ⊕ Fusionner tout
+      </button>
+    </div>
+    <p id="mergeStatus" class="text-green-400 text-xs text-center mb-3 hidden"></p>
 
-    <label class="block text-sm text-gray-400 mb-1">Type</label>
-    <select id="sourceType" onchange="toggleSourceType()"
-      class="w-full bg-gray-700 rounded-lg px-4 py-2 mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500">
-      <option value="url">URL M3U</option>
-      <option value="file">Fichier M3U</option>
-      <option value="xtream">Xtream Codes</option>
-    </select>
+    <!-- Formulaire ajout (masqué par défaut) -->
+    <div id="addForm" class="hidden border-t border-gray-700 pt-5">
+      <div class="flex justify-between items-center mb-4">
+        <h2 class="text-sm font-semibold text-white">Nouvelle playlist</h2>
+        <button onclick="hideAddForm()" class="text-gray-500 hover:text-gray-300 text-xs">✕ Annuler</button>
+      </div>
 
-    <!-- URL M3U -->
-    <div id="urlSection">
-      <label class="block text-sm text-gray-400 mb-1">URL M3U</label>
-      <input id="source" type="url" placeholder="https://..."
+      <label class="block text-sm text-gray-400 mb-1">Nom</label>
+      <input id="name" type="text" placeholder="Ma playlist"
         class="w-full bg-gray-700 rounded-lg px-4 py-2 mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500"
       />
-    </div>
 
-    <!-- Fichier M3U -->
-    <div id="fileSection" class="hidden">
-      <label class="block text-sm text-gray-400 mb-1">Fichier .m3u / .m3u8</label>
-      <input id="file" type="file" accept=".m3u,.m3u8,audio/x-mpegurl,application/x-mpegurl"
-        class="w-full bg-gray-700 rounded-lg px-3 py-2 mb-1 text-sm file:mr-3 file:py-1.5 file:px-3 file:rounded-md file:border-0 file:bg-blue-600 file:text-white file:text-sm focus:outline-none"
-      />
-      <p class="text-xs text-gray-500 mb-4">Taille max : 20 Mo</p>
-    </div>
+      <label class="block text-sm text-gray-400 mb-1">Type</label>
+      <select id="sourceType" onchange="toggleSourceType()"
+        class="w-full bg-gray-700 rounded-lg px-4 py-2 mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500">
+        <option value="url">URL M3U</option>
+        <option value="file">Fichier M3U</option>
+        <option value="xtream">Xtream Codes</option>
+      </select>
 
-    <!-- Xtream -->
-    <div id="xtreamSection" class="hidden">
-      <label class="block text-sm text-gray-400 mb-1">Serveur</label>
-      <input id="xtreamServer" type="url" placeholder="http://serveur.com:8080"
-        class="w-full bg-gray-700 rounded-lg px-4 py-2 mb-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-      />
-      <label class="block text-sm text-gray-400 mb-1">Nom d'utilisateur</label>
-      <input id="xtreamUser" type="text" placeholder="username"
-        class="w-full bg-gray-700 rounded-lg px-4 py-2 mb-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-      />
-      <label class="block text-sm text-gray-400 mb-1">Mot de passe</label>
-      <input id="xtreamPass" type="password" placeholder="password"
+      <!-- URL M3U -->
+      <div id="urlSection">
+        <label class="block text-sm text-gray-400 mb-1">URL M3U</label>
+        <input id="source" type="url" placeholder="https://..."
+          class="w-full bg-gray-700 rounded-lg px-4 py-2 mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500"
+        />
+      </div>
+
+      <!-- Fichier M3U -->
+      <div id="fileSection" class="hidden">
+        <label class="block text-sm text-gray-400 mb-1">Fichier .m3u / .m3u8</label>
+        <input id="file" type="file" accept=".m3u,.m3u8,audio/x-mpegurl,application/x-mpegurl"
+          class="w-full bg-gray-700 rounded-lg px-3 py-2 mb-1 text-sm file:mr-3 file:py-1.5 file:px-3 file:rounded-md file:border-0 file:bg-blue-600 file:text-white file:text-sm focus:outline-none"
+        />
+        <p class="text-xs text-gray-500 mb-4">Taille max : 50 Mo</p>
+      </div>
+
+      <!-- Xtream -->
+      <div id="xtreamSection" class="hidden">
+        <label class="block text-sm text-gray-400 mb-1">Serveur</label>
+        <input id="xtreamServer" type="url" placeholder="http://serveur.com:8080"
+          class="w-full bg-gray-700 rounded-lg px-4 py-2 mb-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+        />
+        <label class="block text-sm text-gray-400 mb-1">Nom d'utilisateur</label>
+        <input id="xtreamUser" type="text" placeholder="username"
+          class="w-full bg-gray-700 rounded-lg px-4 py-2 mb-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+        />
+        <label class="block text-sm text-gray-400 mb-1">Mot de passe</label>
+        <input id="xtreamPass" type="password" placeholder="password"
+          class="w-full bg-gray-700 rounded-lg px-4 py-2 mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500"
+        />
+      </div>
+
+      <label class="block text-sm text-gray-400 mb-1">URL EPG <span class="text-gray-500">(optionnel)</span></label>
+      <input id="epgUrl" type="url" placeholder="https://..."
         class="w-full bg-gray-700 rounded-lg px-4 py-2 mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500"
       />
+
+      <button onclick="sendPlaylist()"
+        class="w-full bg-green-600 hover:bg-green-700 rounded-lg py-3 font-semibold transition">
+        📺 Envoyer à la TV
+      </button>
+      <p id="playlistError" class="text-red-400 text-sm mt-2 hidden"></p>
     </div>
-
-    <label class="block text-sm text-gray-400 mb-1">URL EPG <span class="text-gray-500">(optionnel)</span></label>
-    <input id="epgUrl" type="url" placeholder="https://..."
-      class="w-full bg-gray-700 rounded-lg px-4 py-2 mb-6 focus:outline-none focus:ring-2 focus:ring-blue-500"
-    />
-
-    <button onclick="sendPlaylist()"
-      class="w-full bg-green-600 hover:bg-green-700 rounded-lg py-3 font-semibold transition">
-      📺 Envoyer à la TV
-    </button>
-    <p id="playlistError" class="text-red-400 text-sm mt-2 hidden"></p>
   </div>
 
   <!-- Étape 3 : succès -->
   <div id="step3" class="bg-gray-800 rounded-xl p-6 text-center hidden">
     <div class="text-5xl mb-4">✅</div>
     <h2 class="text-xl font-bold mb-2">Playlist envoyée !</h2>
-    <p class="text-gray-400">Votre TV va recevoir la playlist dans quelques secondes.</p>
+    <p class="text-gray-400 mb-4">Votre TV va recevoir la playlist dans quelques secondes.</p>
+    <div id="deviceSummary" class="bg-gray-700 rounded-lg p-3 text-left text-sm mb-4 hidden">
+      <p class="text-gray-400 text-xs mb-1">Appareil destinataire</p>
+      <p id="deviceSummaryName" class="text-white font-medium"></p>
+    </div>
     <button onclick="reset()"
-      class="mt-6 text-blue-400 hover:text-blue-300 text-sm transition">
+      class="text-blue-400 hover:text-blue-300 text-sm transition">
       Ajouter une autre playlist
     </button>
   </div>
@@ -115,77 +151,124 @@
   const API_BASE = window.location.origin;
 
   let resolvedDeviceId = null;
+  let currentCode = null;
 
-  // ── Étape 1 : vérifier le code ──────────────────────────────────────────────
   async function verifyCode() {
-    const code = document.getElementById('code').value.trim().toUpperCase();
     const errorEl = document.getElementById('codeError');
     errorEl.classList.add('hidden');
-
-    if (code.length !== 6) {
-      showError(errorEl, 'Le code doit contenir 6 caractères.');
-      return;
-    }
+    const code = document.getElementById('code').value.trim().toUpperCase();
+    if (code.length !== 6) { showError(errorEl, 'Code à 6 caractères requis.'); return; }
 
     try {
       const res = await fetch(`${API_BASE}/api/device/resolve/${code}`);
-      if (!res.ok) {
-        showError(errorEl, 'Code invalide ou expiré. Vérifiez le code affiché sur votre TV.');
-        return;
-      }
+      if (!res.ok) { showError(errorEl, 'Code invalide ou expiré.'); return; }
       const device = await res.json();
-      resolvedDeviceId = device.deviceId;
 
+      resolvedDeviceId = device.deviceId;
+      currentCode = code;
       document.getElementById('deviceInfo').textContent = `${device.deviceName} connectée`;
       document.getElementById('step1').classList.add('hidden');
       document.getElementById('step2').classList.remove('hidden');
+      loadPlaylists();
     } catch (e) {
       showError(errorEl, 'Erreur réseau. Réessayez.');
     }
   }
 
-  // ── Étape 2 : envoyer la playlist ──────────────────────────────────────────
+  // ── Playlists existantes ─────────────────────────────────────────────────────
+  async function loadPlaylists() {
+    const el = document.getElementById('existingPlaylists');
+    el.innerHTML = '<p class="text-gray-600 text-sm text-center py-2">Chargement…</p>';
+    try {
+      const res = await fetch(`${API_BASE}/api/device/code/${currentCode}/playlists`);
+      const playlists = await res.json();
+
+      if (!Array.isArray(playlists) || playlists.length === 0) {
+        el.innerHTML = '<p class="text-gray-500 text-sm text-center py-2 italic">Aucune playlist sur cette TV.</p>';
+        document.getElementById('mergeBtn').classList.add('opacity-50', 'cursor-not-allowed');
+        return;
+      }
+
+      document.getElementById('mergeBtn').classList.remove('opacity-50', 'cursor-not-allowed');
+      el.innerHTML = playlists.map(p => `
+        <div class="flex justify-between items-center bg-gray-700 rounded-lg px-4 py-3 mb-2">
+          <div>
+            <p class="text-sm font-medium text-white">${p.name}</p>
+            <p class="text-xs text-gray-400">${p.channelCount > 0 ? p.channelCount + ' chaînes · ' : ''}${p.sourceType}</p>
+          </div>
+          <button onclick="removePlaylist('${p.id}', '${p.name}')"
+            class="text-red-500 hover:text-red-400 text-lg leading-none px-2">✕</button>
+        </div>
+      `).join('');
+    } catch (e) {
+      el.innerHTML = '<p class="text-red-500 text-sm text-center py-2">Erreur de chargement.</p>';
+    }
+  }
+
+  async function removePlaylist(playlistId, name) {
+    if (!confirm(`Supprimer "${name}" de cette TV ?`)) return;
+    try {
+      await fetch(`${API_BASE}/api/device/code/${currentCode}/playlist/${playlistId}`, { method: 'DELETE' });
+      loadPlaylists();
+    } catch (e) {
+      alert('Erreur lors de la suppression.');
+    }
+  }
+
+  async function mergeAll() {
+    const btn = document.getElementById('mergeBtn');
+    const status = document.getElementById('mergeStatus');
+    if (btn.classList.contains('cursor-not-allowed')) return;
+    if (!confirm('Fusionner toutes les playlists sur cette TV en une seule liste de chaînes ?')) return;
+    try {
+      await fetch(`${API_BASE}/api/device/code/${currentCode}/merge`, { method: 'POST' });
+      status.textContent = '✓ Instruction de fusion envoyée à la TV';
+      status.classList.remove('hidden');
+      setTimeout(() => status.classList.add('hidden'), 4000);
+    } catch (e) {
+      alert('Erreur lors de la fusion.');
+    }
+  }
+
+  function showAddForm() {
+    document.getElementById('addForm').classList.remove('hidden');
+  }
+
+  function hideAddForm() {
+    document.getElementById('addForm').classList.add('hidden');
+  }
+
+  // ── Envoi playlist ────────────────────────────────────────────────────────────
   async function sendPlaylist() {
     const errorEl = document.getElementById('playlistError');
     errorEl.classList.add('hidden');
-
     const sourceType = document.getElementById('sourceType').value;
-    const code = document.getElementById('code').value.trim().toUpperCase();
+    const code = currentCode;
     const name = document.getElementById('name').value.trim() || 'Ma playlist';
     const epgUrl = document.getElementById('epgUrl').value.trim();
 
     try {
       let res;
-
       if (sourceType === 'file') {
-        // Upload multipart — endpoint dédié /playlist/upload, le serveur
-        // stocke le fichier et le sert ensuite comme une URL M3U classique.
         const fileInput = document.getElementById('file');
         const file = fileInput.files[0];
         if (!file) { showError(errorEl, 'Sélectionnez un fichier .m3u.'); return; }
-
         const formData = new FormData();
         formData.append('name', name);
         formData.append('file', file);
         if (epgUrl) formData.append('epgUrl', epgUrl);
-
-        res = await fetch(`${API_BASE}/api/device/code/${code}/playlist/upload`, {
-          method: 'POST',
-          body: formData, // pas de Content-Type manuel — le navigateur fixe le boundary multipart
-        });
+        res = await fetch(`${API_BASE}/api/device/code/${code}/playlist/upload`, { method: 'POST', body: formData });
       } else {
         const body = { name, sourceType, epgUrl: epgUrl || null };
-
         if (sourceType === 'url') {
           body.source = document.getElementById('source').value.trim();
-          if (!body.source) { showError(errorEl, 'L\'URL M3U est requise.'); return; }
+          if (!body.source) { showError(errorEl, "L'URL M3U est requise."); return; }
         } else {
           body.xtreamServer   = document.getElementById('xtreamServer').value.trim();
           body.xtreamUsername = document.getElementById('xtreamUser').value.trim();
           body.xtreamPassword = document.getElementById('xtreamPass').value.trim();
           if (!body.xtreamServer) { showError(errorEl, 'Le serveur Xtream est requis.'); return; }
         }
-
         res = await fetch(`${API_BASE}/api/device/code/${code}/playlist`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -195,12 +278,25 @@
 
       if (!res.ok) {
         const err = await res.json();
-        showError(errorEl, err.error || 'Erreur lors de l\'envoi.');
+        showError(errorEl, err.error || "Erreur lors de l'envoi.");
         return;
       }
 
+      // Succès — fermer le formulaire et rafraîchir la liste
+      hideAddForm();
+      document.getElementById('name').value = '';
+      document.getElementById('source').value = '';
+      loadPlaylists();
+
+      // Afficher step3 brièvement
       document.getElementById('step2').classList.add('hidden');
       document.getElementById('step3').classList.remove('hidden');
+      const nameEl = document.getElementById('deviceSummaryName');
+      const summaryEl = document.getElementById('deviceSummary');
+      if (nameEl) {
+        nameEl.textContent = document.getElementById('deviceInfo').textContent;
+        summaryEl.classList.remove('hidden');
+      }
     } catch (e) {
       showError(errorEl, 'Erreur réseau. Réessayez.');
     }
@@ -215,8 +311,11 @@
 
   function reset() {
     resolvedDeviceId = null;
+    currentCode = null;
     document.getElementById('code').value = '';
     document.getElementById('step3').classList.add('hidden');
+    document.getElementById('step2').classList.add('hidden');
+    document.getElementById('addForm').classList.add('hidden');
     document.getElementById('step1').classList.remove('hidden');
   }
 

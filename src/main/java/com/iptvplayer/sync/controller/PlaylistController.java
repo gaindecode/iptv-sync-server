@@ -125,6 +125,53 @@ public class PlaylistController {
     }
 
     /**
+     * GET /api/device/code/{pairCode}/playlists
+     * Liste les playlists d'un device via son PairCode — utilisé par le portail.
+     */
+    @GetMapping("/device/code/{pairCode}/playlists")
+    public ResponseEntity<Object> getPlaylistsByCode(@PathVariable String pairCode) {
+        return deviceService.resolveCode(pairCode)
+            .<ResponseEntity<Object>>map(device ->
+                ResponseEntity.ok(playlistService.getPlaylists(device.getId()))
+            )
+            .orElse(ResponseEntity.badRequest()
+                .body(Map.of("error", "Code invalide ou expiré")));
+    }
+
+    /**
+     * DELETE /api/device/code/{pairCode}/playlist/{playlistId}
+     * Supprime une playlist via PairCode — push WebSocket temps réel vers la TV.
+     */
+    @DeleteMapping("/device/code/{pairCode}/playlist/{playlistId}")
+    public ResponseEntity<Object> removePlaylistByCode(
+        @PathVariable String pairCode,
+        @PathVariable UUID playlistId
+    ) {
+        return deviceService.resolveCode(pairCode)
+            .<ResponseEntity<Object>>map(device -> {
+                playlistService.removePlaylist(device.getId(), playlistId);
+                return ResponseEntity.noContent().build();
+            })
+            .orElse(ResponseEntity.badRequest()
+                .body(Map.of("error", "Code invalide ou expiré")));
+    }
+
+    /**
+     * POST /api/device/code/{pairCode}/merge
+     * Demande à la TV de fusionner toutes ses playlists — push WebSocket MERGE_ALL.
+     */
+    @PostMapping("/device/code/{pairCode}/merge")
+    public ResponseEntity<Object> mergeAllByCode(@PathVariable String pairCode) {
+        return deviceService.resolveCode(pairCode)
+            .<ResponseEntity<Object>>map(device -> {
+                playlistService.mergeAll(device.getId());
+                return ResponseEntity.ok(Map.of("status", "MERGE_ALL envoyé"));
+            })
+            .orElse(ResponseEntity.badRequest()
+                .body(Map.of("error", "Code invalide ou expiré")));
+    }
+
+    /**
      * GET /api/device/{deviceId}/playlists
      * Liste les playlists d'un device.
      */

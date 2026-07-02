@@ -32,7 +32,7 @@ public class FileStorageService {
     private String uploadDir;
 
     /** Taille max acceptée — alignée sur spring.servlet.multipart.max-file-size */
-    private static final long MAX_FILE_SIZE = 20 * 1024 * 1024; // 20 Mo
+    private static final long MAX_FILE_SIZE = 50 * 1024 * 1024; // 50 Mo
 
     /**
      * Sauvegarde le fichier uploadé et retourne son identifiant unique

@@ -125,6 +125,12 @@ public class DeviceService {
         deviceRepository.updateLastSeen(deviceId, LocalDateTime.now());
     }
 
+    @Transactional
+    public void deleteDevice(UUID deviceId) {
+        deviceRepository.deleteById(deviceId);
+        log.info("Device supprimé : {}", deviceId);
+    }
+
     /** Nettoyage horaire des codes expirés */
     @Scheduled(fixedDelay = 3_600_000)
     @Transactional
