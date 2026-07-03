@@ -126,6 +126,15 @@ public class DeviceService {
     }
 
     @Transactional
+    public void markOffline(UUID deviceId) {
+        deviceRepository.findById(deviceId).ifPresent(device -> {
+            device.setStatus(Device.DeviceStatus.OFFLINE);
+            deviceRepository.save(device);
+            log.debug("Device OFFLINE : {}", deviceId);
+        });
+    }
+
+    @Transactional
     public void deleteDevice(UUID deviceId) {
         deviceRepository.deleteById(deviceId);
         log.info("Device supprimé : {}", deviceId);

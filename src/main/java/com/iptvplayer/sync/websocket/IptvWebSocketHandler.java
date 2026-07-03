@@ -71,6 +71,7 @@ public class IptvWebSocketHandler extends TextWebSocketHandler {
         String deviceId = (String) session.getAttributes().get("deviceId");
         if (deviceId != null) {
             sessionManager.unregister(deviceId);
+            deviceService.markOffline(UUID.fromString(deviceId));
         }
         log.debug("WS fermé : {} status={}", session.getId(), status);
     }
@@ -79,6 +80,9 @@ public class IptvWebSocketHandler extends TextWebSocketHandler {
     public void handleTransportError(WebSocketSession session, Throwable exception) {
         String deviceId = (String) session.getAttributes().get("deviceId");
         log.error("WS erreur device={} : {}", deviceId, exception.getMessage());
-        if (deviceId != null) sessionManager.unregister(deviceId);
+        if (deviceId != null) {
+            sessionManager.unregister(deviceId);
+            deviceService.markOffline(UUID.fromString(deviceId));
+        }
     }
 }
